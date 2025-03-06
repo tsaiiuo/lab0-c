@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
 /* Merge two list */
 struct list_head *merge_two_queue(struct list_head *L1, struct list_head *L2)
 {
@@ -11,7 +13,7 @@ struct list_head *merge_two_queue(struct list_head *L1, struct list_head *L2)
 
     for (; L1 && L2; indirect = &(*indirect)->next) {
         if (strcmp(list_entry(L1, element_t, list)->value,
-                   list_entry(L2, element_t, list)->value) > 0) {
+                   list_entry(L2, element_t, list)->value) <= 0) {
             (*indirect) = L1;
             L1 = L1->next;
         } else {
@@ -19,13 +21,14 @@ struct list_head *merge_two_queue(struct list_head *L1, struct list_head *L2)
             L2 = L2->next;
         }
     }
-    *indirect = (struct list_head *) ((uintptr_t) L1 | (uintptr_t) L2);
+    // *indirect = (struct list_head *) ((uintptr_t) L1 | (uintptr_t) L2);
+    *indirect = (L1) ? L1 : L2;
     return head;
 }
 /* Use merge_two_queue to implement mergesort */
 struct list_head *merge_sort_queue(struct list_head *head)
 {
-    if (!head || list_empty(head))
+    if (!head || !head->next)
         return head;
 
 
@@ -271,15 +274,31 @@ void q_sort(struct list_head *head, bool descend)
         return;
     head->prev->next = NULL;
     head->next = merge_sort_queue(head->next);
-    struct list_head *start = head;
 
-    for (; start->next; start = start->next) {
-        start->next->prev = start;
+    if (!descend) {
+        struct list_head *prev = head, *curr = head->next;
+        while (curr) {
+            curr->prev = prev;
+            prev = curr;
+            curr = curr->next;
+        }
+        prev->next = head;
+        head->prev = prev;
+    } else {
+        struct list_head *prev = head, *curr = head->next,
+                         *next = head->next->next;
+        while (next) {
+            curr->next = prev;
+            curr->prev = next;
+            prev = curr;
+            curr = next;
+            next = next->next;
+        }
+        curr->next = prev;
+        curr->prev = head;
+        head->next = curr;
+        head->prev = head->next;
     }
-    start->next = head;
-    head->prev = start;
-    if (!descend)
-        q_reverse(head);
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
