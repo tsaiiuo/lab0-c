@@ -1,9 +1,51 @@
+#include "queue.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/* Merge two list */
+struct list_head *merge_two_queue(struct list_head *L1, struct list_head *L2)
+{
+    struct list_head *head = NULL;
+    struct list_head **indirect = &head;
 
-#include "queue.h"
+    for (; L1 && L2; indirect = &(*indirect)->next) {
+        if (strcmp(list_entry(L1, element_t, list)->value,
+                   list_entry(L2, element_t, list)->value) > 0) {
+            (*indirect) = L1;
+            L1 = L1->next;
+        } else {
+            (*indirect) = L2;
+            L2 = L2->next;
+        }
+    }
+    *indirect = (struct ListNode *) ((uintptr_t) L1 | (uintptr_t) L2);
+    return head;
+}
+/* Use merge_two_queue to implement mergesort */
+struct list_head *merge_sort_queue(struct list_head *head)
+{
+    if (!head || list_empty(head))
+        return head;
 
+
+    struct list_head *slow = head, *fast = head->next;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+
+    struct list_head *mid = slow->next;
+    slow->next = NULL;
+
+
+    struct list_head *left = mergeSortList(head);
+    struct list_head *right = mergeSortList(mid);
+
+
+    return merge_two_queue(left, right);
+}
 /* Create an empty queue */
 struct list_head *q_new()
 {
