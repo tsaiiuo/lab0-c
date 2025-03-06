@@ -19,7 +19,7 @@ struct list_head *merge_two_queue(struct list_head *L1, struct list_head *L2)
             L2 = L2->next;
         }
     }
-    *indirect = (struct ListNode *) ((uintptr_t) L1 | (uintptr_t) L2);
+    *indirect = (struct list_head *) ((uintptr_t) L1 | (uintptr_t) L2);
     return head;
 }
 /* Use merge_two_queue to implement mergesort */
@@ -40,8 +40,8 @@ struct list_head *merge_sort_queue(struct list_head *head)
     slow->next = NULL;
 
 
-    struct list_head *left = mergeSortList(head);
-    struct list_head *right = mergeSortList(mid);
+    struct list_head *left = merge_sort_queue(head);
+    struct list_head *right = merge_sort_queue(mid);
 
 
     return merge_two_queue(left, right);
