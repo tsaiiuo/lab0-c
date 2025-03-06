@@ -67,7 +67,7 @@ void q_free(struct list_head *head)
         return;
     struct list_head *node = NULL;
     struct list_head *safe = NULL;
-    list_for_each_safe (node, safe, head) {
+    list_for_each_safe(node, safe, head) {
         element_t *curr = list_entry(node, element_t, list);
         q_release_element(curr);
     };
@@ -157,7 +157,7 @@ int q_size(struct list_head *head)
     int len = 0;
     struct list_head *node = NULL;
 
-    list_for_each (node, head) {
+    list_for_each(node, head) {
         len++;
     };
 
@@ -240,7 +240,7 @@ void q_reverse(struct list_head *head)
     }
     struct list_head *curr, *safe;
 
-    list_for_each_safe (curr, safe, head) {
+    list_for_each_safe(curr, safe, head) {
         list_move(curr, head);
     }
 }
@@ -256,14 +256,15 @@ void q_reverseK(struct list_head *head, int k)
     struct list_head *temp = head;
     LIST_HEAD(dummy);
     int count = 0;
-    list_for_each_safe (curr, safe, head) {
+    list_for_each_safe(curr, safe, head) {
         count++;
         if (count == k) {
             list_cut_position(&dummy, temp, curr);
             q_reverse(&dummy);
+            list_splice_init(&dummy, temp);
             count = 0;
+            temp = safe->prev;
         }
-        temp = safe->prev;
     }
 }
 
@@ -305,16 +306,17 @@ void q_sort(struct list_head *head, bool descend)
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
-    if (!head || list_empty(head))
+    if (!head)
         return 0;
-    struct list_head *p = head->next, *pp = p->next;
-    for (; pp != head; pp = pp->next) {
-        element_t *temp = list_entry(pp, element_t, list);
-        if (strcmp(temp->value, list_entry(p, element_t, list)->value) < 0) {
-            list_del(pp);
-            q_release_element(temp);
+    struct list_head *p = head->next;
+    element_t *p_ele = list_entry(p, element_t, list);
+    while (p_ele->list.next != head) {
+        element_t *pp_ele = list_entry(p_ele->list.next, element_t, list);
+        if (strcmp(pp_ele->value, p_ele->value) < 0) {
+            list_del(&pp_ele->list);
+            q_release_element(pp_ele);
         } else {
-            p = pp;
+            p_ele = pp_ele;
         }
     }
     return q_size(head);
@@ -324,17 +326,18 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    if (!head || list_empty(head))
+    // https://leetcode.com/problems/remove-nodes-from-linked-list/
+    if (!head)
         return 0;
-    struct list_head *p = head->prev, *pp = p->prev;
-    for (; pp != head; pp = pp->prev) {
-        element_t *temp = list_entry(pp, element_t, list);
-        if (strcmp(list_entry(pp, element_t, list)->value,
-                   list_entry(p, element_t, list)->value) < 0) {
-            list_del(pp);
-            q_release_element(temp);
+    struct list_head *p = head->prev;
+    element_t *p_ele = list_entry(p, element_t, list);
+    while (p_ele->list.prev != head) {
+        element_t *pp_ele = list_entry(p_ele->list.prev, element_t, list);
+        if (strcmp(pp_ele->value, p_ele->value) < 0) {
+            list_del(&pp_ele->list);
+            q_release_element(pp_ele);
         } else {
-            p = pp;
+            p_ele = pp_ele;
         }
     }
     return q_size(head);
