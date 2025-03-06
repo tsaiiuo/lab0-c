@@ -84,7 +84,8 @@ bool q_insert_head(struct list_head *head, char *s)
 
     new_element->value = strdup(s);
     if (!new_element->value) {
-        free(new_element);
+        // free(new_element);
+        q_release_element(new_element);
         return false;
     }
 
@@ -104,7 +105,8 @@ bool q_insert_tail(struct list_head *head, char *s)
 
     new_element->value = strdup(s);
     if (!new_element->value) {
-        free(new_element);
+        // free(new_element);
+        q_release_element(new_element);
         return false;
     }
 
@@ -233,18 +235,17 @@ void q_reverse(struct list_head *head)
     if (!head || list_empty(head)) {
         return;
     }
-    struct list_head *temp;
-    for (struct list_head *next_ptr = head->next->next; next_ptr != head;
-         next_ptr = temp) {
-        temp = next_ptr->next;
-        list_move(next_ptr, temp);
+    struct list_head *curr, *safe;
+
+    list_for_each_safe (curr, safe, head) {
+        list_move(curr, head);
     }
 }
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
-    // https://leetcode.com/problems/reverse-nodes-in-k-group/
+    // https:  // leetcode.com/problems/reverse-nodes-in-k-group/
     if (!head || k == 1 || list_empty(head)) {
         return;
     }
