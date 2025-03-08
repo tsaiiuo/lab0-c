@@ -7,7 +7,8 @@ qtest
 core*
 .cmd_history
 .out
-
+venv
+requirements.txt
 # ctags files
 TAGS
 .TAGS
