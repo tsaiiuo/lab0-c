@@ -26,7 +26,7 @@
 /* Shannon entropy */
 extern double shannon_entropy(const uint8_t *input_data);
 extern int show_entropy;
-
+extern void q_shuffle(struct list_head *head);
 /* Our program needs to use regular malloc/free */
 #define INTERNAL 1
 #include "harness.h"
@@ -544,7 +544,7 @@ static bool do_size(int argc, char *argv[])
     bool ok = true;
     if (argc == 2) {
         if (!get_int(argv[1], &reps))
-            report(1, "Invalid number of calls to size '%s'", argv[1]);
+            report(1, "Invalid number of calls to size '%s'", argv[2]);
     }
 
     int cnt = 0;
@@ -913,6 +913,27 @@ static bool do_merge(int argc, char *argv[])
     return ok && !error_check();
 }
 
+static bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q)
+        report(3, "Warning: Calling shuflle on null queue");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (current && exception_setup(true))
+        q_shuffle(current->q);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+    q_show(3);
+    return !error_check();
+}
+
 static bool is_circular()
 {
     struct list_head *cur = current->q->next;
@@ -1085,6 +1106,7 @@ static void console_init()
     ADD_COMMAND(dm, "Delete middle node in queue", "");
     ADD_COMMAND(dedup, "Delete all nodes that have duplicate string", "");
     ADD_COMMAND(merge, "Merge all the queues into one sorted queue", "");
+    ADD_COMMAND(shuffle, "Shuffle the queue by Fisher Yates algorithm", "");
     ADD_COMMAND(swap, "Swap every two adjacent nodes in queue", "");
     ADD_COMMAND(ascend,
                 "Remove every node which has a node with a strictly less "
