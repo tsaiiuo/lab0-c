@@ -64,9 +64,39 @@ static void differentiate(int64_t *exec_times,
         exec_times[i] = after_ticks[i] - before_ticks[i];
 }
 
+static int cmp(const int64_t *a, const int64_t *b)
+{
+    return (int) (*a - *b);
+}
+
+
+
+static int64_t percentile(int64_t *a_sorted, double which, size_t size)
+{
+    size_t array_position = (size_t) ((double) size * (double) which);
+    assert(array_position < size);
+
+    return a_sorted[array_position];
+}
+
+
+
+static void prepare_percentiles(int64_t *ctx)
+{
+    qsort(ctx, N_MEASURES, sizeof(int64_t),
+          (int (*)(const void *, const void *)) cmp);
+
+
+    for (size_t i = 0; i < N_MEASURES; i++) {
+        ctx[i] =
+            percentile(ctx, 1 - (pow(0.5, 10 * (double) (i + 1) / N_MEASURES)),
+                       N_MEASURES);
+    }
+}
+
 static void update_statistics(const int64_t *exec_times, uint8_t *classes)
 {
-    for (size_t i = 0; i < N_MEASURES; i++) {
+    for (size_t i = 5; i < N_MEASURES; i++) {
         int64_t difference = exec_times[i];
         /* CPU cycle counter overflowed or dropped measurement */
         if (difference <= 0)
@@ -133,6 +163,7 @@ static bool doit(int mode)
 
     bool ret = measure(before_ticks, after_ticks, input_data, mode);
     differentiate(exec_times, before_ticks, after_ticks);
+    prepare_percentiles(exec_times);
     update_statistics(exec_times, classes);
     ret &= report();
 
